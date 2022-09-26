@@ -8,6 +8,11 @@ from torch import nn
 from torchvision.transforms import ToTensor
 from model import MattingBase, MattingRefine
 
+import sys
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
+from PyQt5.QtCore import *
+
 # --------------- Main ---------------
 
 config = json.load(open('config.json'))
@@ -53,27 +58,96 @@ else:
         bgr = cv2.rotate(bgr, cv2.ROTATE_90_CLOCKWISE)
     bgr = cv2_frame_to_cuda(bgr)
 
-with torch.no_grad():
-    while True:
-        # Normal
-        frame = cam.read()
 
-        # Rotated
-        frame_rotated = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
+class MainWindow(QWidget):
+    def __init__(self):
+        super(MainWindow, self).__init__()
 
-        src = cv2_frame_to_cuda(frame_rotated)
-        pha, fgr = model(src, bgr)[:2]
+        self.VBL = QVBoxLayout()
 
-        vidframe = tb_video[frame_num].unsqueeze_(0).cuda()
-        tgt_bgr = nn.functional.interpolate(vidframe, (fgr.shape[2:]))
-        frame_num += 1
-        if frame_num >= tb_video.__len__():
-            frame_num = 0
+        self.FeedLabel = QLabel()
+        self.VBL.addWidget(self.FeedLabel)
 
-        # res = pha * fgr + (1 - pha) * torch.ones_like(fgr)
-        res = pha * fgr + (1 - pha) * tgt_bgr
-        res = res.mul(255).byte().cpu().permute(0, 2, 3, 1).numpy()[0]
-        res = cv2.cvtColor(res, cv2.COLOR_RGB2BGR)
-        key = dsp.step(res)
-        if key == ord('q'):
-            exit()
+        self.CancelBTN = QPushButton("Cancel")
+        self.CancelBTN.clicked.connect(self.CancelFeed)
+        self.VBL.addWidget(self.CancelBTN)
+
+        self.Worker1 = Worker1()
+
+        self.Worker1.start()
+        self.Worker1.ImageUpdate.connect(self.ImageUpdateSlot)
+        self.setLayout(self.VBL)
+
+    def ImageUpdateSlot(self, Image):
+        self.FeedLabel.setPixmap(QPixmap.fromImage(Image))
+
+    def CancelFeed(self):
+        self.Worker1.stop()
+
+
+class Worker1(QThread):
+    ImageUpdate = pyqtSignal(QImage)
+
+    def run(self):
+        self.ThreadActive = True
+        while self.ThreadActive:
+            frame = cam.read()
+            if frame:
+                if config['rotated']:
+                    frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
+
+                src = cv2_frame_to_cuda(frame)
+                pha, fgr = model(src, bgr)[:2]
+
+                vidframe = tb_video[frame_num].unsqueeze_(0).cuda()
+                tgt_bgr = nn.functional.interpolate(vidframe, (fgr.shape[2:]))
+                frame_num += 1
+                if frame_num >= tb_video.__len__():
+                    frame_num = 0
+
+                # res = pha * fgr + (1 - pha) * torch.ones_like(fgr)
+                res = pha * fgr + (1 - pha) * tgt_bgr
+                res = res.mul(255).byte().cpu().permute(0, 2, 3, 1).numpy()[0]
+                # res = cv2.cvtColor(res, cv2.COLOR_RGB2BGR)
+
+                Image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                FlippedImage = cv2.flip(res, 1)
+                ConvertToQtFormat = QImage(FlippedImage.data, FlippedImage.shape[1], FlippedImage.shape[0], QImage.Format_RGB888)
+                Pic = ConvertToQtFormat.scaled(720, 1280, Qt.KeepAspectRatio)
+                self.ImageUpdate.emit(Pic)
+
+    def stop(self):
+        self.ThreadActive = False
+        self.quit()
+
+
+if __name__ == "__main__":
+    App = QApplication(sys.argv)
+    Root = MainWindow()
+    Root.show()
+    sys.exit(App.exec())
+# with torch.no_grad():
+#     while True:
+#         # Normal
+#         frame = cam.read()
+#
+#         # Rotated
+#         if config['rotated']:
+#             frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
+#
+#         src = cv2_frame_to_cuda(frame)
+#         pha, fgr = model(src, bgr)[:2]
+#
+#         vidframe = tb_video[frame_num].unsqueeze_(0).cuda()
+#         tgt_bgr = nn.functional.interpolate(vidframe, (fgr.shape[2:]))
+#         frame_num += 1
+#         if frame_num >= tb_video.__len__():
+#             frame_num = 0
+#
+#         # res = pha * fgr + (1 - pha) * torch.ones_like(fgr)
+#         res = pha * fgr + (1 - pha) * tgt_bgr
+#         res = res.mul(255).byte().cpu().permute(0, 2, 3, 1).numpy()[0]
+#         res = cv2.cvtColor(res, cv2.COLOR_RGB2BGR)
+#         key = dsp.step(res)
+#         if key == ord('q'):
+#             exit()
