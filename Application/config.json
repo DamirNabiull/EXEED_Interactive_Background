@@ -1,0 +1,14 @@
+{
+  "model_type": "mattingrefine",
+  "model_backbone": "resnet101",
+  "model_backbone_scale": 0.25,
+  "model_refine_mode": "sampling",
+  "model_refine_sample_pixels": 80000,
+  "model_refine_threshold": 0.7,
+  "model_checkpoint": "./checkpoints/pytorch_resnet101.pth",
+  "no_background": true,
+  "video_bgr": "./image/background.jpg",
+  "target_video": "./video/background.mp4",
+  "resolution": "1280 720",
+  "rotated": true
+}
