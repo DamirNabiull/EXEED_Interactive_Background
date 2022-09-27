@@ -36,8 +36,10 @@ class Camera:
         with self.read_lock:
             frame = self.frame.copy()
         return frame
+
     def __exit__(self, exec_type, exc_value, traceback):
         self.capture.release()
+
 
 # An FPS tracker that computes exponentialy moving average FPS
 class FPSTracker:
