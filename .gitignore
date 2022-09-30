@@ -1,4 +1,3 @@
 *.pth
 .idea
 __pycache__
-background.jpg

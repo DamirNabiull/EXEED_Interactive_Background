@@ -56,9 +56,11 @@ frame_num = 0
 bgr = None
 
 if not path.exists(config["video_bgr"]):
+    print('Not exist')
     bgr = capture_background(cam, config["video_bgr"])
     exit()
 else:
+    print('Exist')
     bgr = cv2.imread(config['video_bgr'], 0)
     if config['rotated']:
         bgr = cv2.rotate(bgr, cv2.ROTATE_90_CLOCKWISE)
