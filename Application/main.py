@@ -137,7 +137,6 @@ class Worker1(QThread):
                 prev = time.time()
                 while time.time() - prev < 15:
                     frame = self.get_frame()
-                    print('*')
                     res = self.__add_background(frame)
                     self.update_pic(res)
                     self.frame_array.append(res)
@@ -161,28 +160,20 @@ class Worker1(QThread):
     def set_capture(self):
         self.frame_num = 0
         self.is_capture = True
-        print('Start capture')
 
     def __add_background(self, frame):
-        print(r'--')
         src = cv2_frame_to_cuda(frame)
         pha, fgr = model(src, bgr)[:2]
 
-        print(r'++')
         vidframe = tb_video[self.frame_num].unsqueeze_(0).cuda()
-        print(r'..')
-        print(self.frame_num)
         tgt_bgr = nn.functional.interpolate(vidframe, (fgr.shape[2:]))
-        print(r'][')
         self.frame_num += 1
         if self.frame_num >= tb_video.__len__():
             self.frame_num = 0
 
-        print(r'()')
         res = pha * fgr + (1 - pha) * tgt_bgr
         res = res.mul(255).byte().cpu().permute(0, 2, 3, 1).numpy()[0]
         res = cv2.cvtColor(res, cv2.COLOR_RGB2BGR)
-        print(r'\/')
         return res
 
     def save_video(self):
