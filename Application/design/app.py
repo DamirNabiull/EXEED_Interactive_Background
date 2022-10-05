@@ -1,112 +1,108 @@
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
-import sys
-import cv2
+from PyQt5.QtGui import QIcon, QFont
+from PyQt5.QtCore import QDir, Qt, QUrl, QSize
+from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
+from PyQt5.QtMultimediaWidgets import QVideoWidget
+from PyQt5.QtWidgets import (QApplication, QFileDialog, QHBoxLayout, QLabel,
+        QPushButton, QSizePolicy, QSlider, QStyle, QVBoxLayout, QWidget, QStatusBar)
 
-import Menu
-import End
-import Instruction
-import Video
+class VideoPlayer(QWidget):
 
-from ctypes import windll
-
-widget: QStackedWidget
-
-
-def go_next_screen():
-    global widget
-    widget.setCurrentIndex(widget.currentIndex() + 1)
-
-
-def go_to_menu():
-    global widget
-    widget.setCurrentIndex(0)
-
-
-class MenuWin(QMainWindow, Menu.Ui_MenuMainWindow):
     def __init__(self, parent=None):
-        super(MenuWin, self).__init__(parent)
-        self.setupUi(self)
-        self.menuStartButton.clicked.connect(go_next_screen)
+        super(VideoPlayer, self).__init__(parent)
 
+        self.mediaPlayer = QMediaPlayer(None, QMediaPlayer.VideoSurface)
 
-class InstructionWin(QMainWindow, Instruction.Ui_InstructionMainWindow):
-    def __init__(self, parent=None):
-        super(InstructionWin, self).__init__(parent)
-        self.setupUi(self)
-        self.instructionButton.clicked.connect(go_next_screen)
+        btnSize = QSize(16, 16)
+        videoWidget = QVideoWidget()
 
+        openButton = QPushButton("Open Video")
+        openButton.setToolTip("Open Video File")
+        openButton.setStatusTip("Open Video File")
+        openButton.setFixedHeight(24)
+        openButton.setIconSize(btnSize)
+        openButton.setFont(QFont("Noto Sans", 8))
+        # openButton.setIcon(QIcon.fromTheme("document-open", QIcon("D:/_Qt/img/open.png")))
+        openButton.clicked.connect(self.abrir)
 
-class VideoWin(QMainWindow, Video.Ui_VideoMainWindow):
-    def __init__(self, parent=None):
-        super(VideoWin, self).__init__(parent)
-        self.setupUi(self)
-        self.videoUpdater = VideoWorker()
-        self.videoUpdater.start()
-        self.videoUpdater.ImageUpdate.connect(self.ImageUpdateSlot)
+        self.playButton = QPushButton()
+        self.playButton.setEnabled(False)
+        self.playButton.setFixedHeight(24)
+        self.playButton.setIconSize(btnSize)
+        self.playButton.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
+        self.playButton.clicked.connect(self.play)
 
-    def ImageUpdateSlot(self, Image):
-        self.videoLabel.setPixmap(QPixmap.fromImage(Image))
+        self.positionSlider = QSlider(Qt.Horizontal)
+        self.positionSlider.setRange(0, 0)
+        self.positionSlider.sliderMoved.connect(self.setPosition)
 
+        self.statusBar = QStatusBar()
+        self.statusBar.setFont(QFont("Noto Sans", 7))
+        self.statusBar.setFixedHeight(14)
 
-class VideoWorker(QThread):
-    ImageUpdate = pyqtSignal(QImage)
-    height: int
-    width: int
+        controlLayout = QHBoxLayout()
+        controlLayout.setContentsMargins(0, 0, 0, 0)
+        controlLayout.addWidget(openButton)
+        controlLayout.addWidget(self.playButton)
+        controlLayout.addWidget(self.positionSlider)
 
-    def run(self):
-        cap = cv2.VideoCapture('../video/background.mp4')
-        success = True
+        layout = QVBoxLayout()
+        layout.addWidget(videoWidget)
+        layout.addLayout(controlLayout)
+        layout.addWidget(self.statusBar)
 
-        self.height = 1920
-        self.width = 1080
+        self.setLayout(layout)
 
-        while success:
-            success, frame = cap.read()
-            self.update_pic(frame)
+        self.mediaPlayer.setVideoOutput(videoWidget)
+        self.mediaPlayer.stateChanged.connect(self.mediaStateChanged)
+        self.mediaPlayer.positionChanged.connect(self.positionChanged)
+        self.mediaPlayer.durationChanged.connect(self.durationChanged)
+        self.mediaPlayer.error.connect(self.handleError)
+        self.statusBar.showMessage("Ready")
 
-    def update_pic(self, frame):
-        Image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        ConvertToQtFormat = QImage(Image.data, Image.shape[1], Image.shape[0], QImage.Format_RGB888)
-        Pic = ConvertToQtFormat.scaled(self.width, self.height, Qt.KeepAspectRatio)
-        self.ImageUpdate.emit(Pic)
+    def abrir(self):
+        fileName, _ = QFileDialog.getOpenFileName(self, "Selecciona los mediose",
+                ".", "Video Files (*.mp4 *.flv *.ts *.mts *.avi)")
 
+        if fileName != '':
+            self.mediaPlayer.setMedia(
+                    QMediaContent(QUrl.fromLocalFile(fileName)))
+            self.playButton.setEnabled(True)
+            self.statusBar.showMessage(fileName)
+            self.play()
 
-class EndWin(QMainWindow, End.Ui_EndMainWindow):
-    def __init__(self, parent=None):
-        super(EndWin, self).__init__(parent)
-        self.setupUi(self)
-        self.endButton.clicked.connect(go_to_menu)
+    def play(self):
+        if self.mediaPlayer.state() == QMediaPlayer.PlayingState:
+            self.mediaPlayer.pause()
+        else:
+            self.mediaPlayer.play()
 
+    def mediaStateChanged(self, state):
+        if self.mediaPlayer.state() == QMediaPlayer.PlayingState:
+            self.playButton.setIcon(
+                    self.style().standardIcon(QStyle.SP_MediaPause))
+        else:
+            self.playButton.setIcon(
+                    self.style().standardIcon(QStyle.SP_MediaPlay))
 
-def main():
-    global widget
-    app = QApplication(sys.argv)
-    QFontDatabase.addApplicationFont('fonts/TacticSans-Bld.otf')
-    stylesheet = open('style.qss').read()
-    app.setStyleSheet(stylesheet)
-    widget = QStackedWidget()
+    def positionChanged(self, position):
+        self.positionSlider.setValue(position)
 
-    menuWin = MenuWin()
-    instructionWin = InstructionWin()
-    videoWin = VideoWin()
-    endWin = EndWin()
+    def durationChanged(self, duration):
+        self.positionSlider.setRange(0, duration)
 
-    widget.addWidget(menuWin)
-    widget.addWidget(instructionWin)
-    widget.addWidget(videoWin)
-    widget.addWidget(endWin)
+    def setPosition(self, position):
+        self.mediaPlayer.setPosition(position)
 
-    widget.setWindowFlag(Qt.FramelessWindowHint)
-    widget.showFullScreen()
-    widget.show()
-    print(type(widget))
-    app.exec_()
-
+    def handleError(self):
+        self.playButton.setEnabled(False)
+        print(self.mediaPlayer.errorString())
+        self.statusBar.showMessage("Error: " + self.mediaPlayer.errorString())
 
 if __name__ == '__main__':
-    h = windll.user32.FindWindowA(b'Shell_TrayWnd', None)
-    # hide the taskbar
-    windll.user32.ShowWindow(h, 9)
-    main()
+    import sys
+    app = QApplication(sys.argv)
+    player = VideoPlayer()
+    player.setWindowTitle("Player")
+    player.resize(1080, 1920)
+    player.show()
+    sys.exit(app.exec_())

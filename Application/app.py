@@ -15,8 +15,10 @@ import uuid
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
+from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
+from PyQt5.QtMultimediaWidgets import QVideoWidget
 
-from design import Menu, End, Instruction, Video
+from design import Menu, End, Instruction, Video, Player
 from ctypes import windll
 
 widget: QStackedWidget
@@ -89,6 +91,10 @@ class VideoWin(QMainWindow, Video.Ui_VideoMainWindow):
     def start_recording(self):
         self.comandLabel.setText('Идет запись')
         self.prepareLabel.hide()
+
+    def closeEvent(self, event):
+        self.videoUpdater.quit()
+        exit()
 
 
 class VideoWorker(QThread):
@@ -189,6 +195,24 @@ class VideoWorker(QThread):
         print('Out is released')
 
 
+class PlayerWin(QMainWindow, Player.Ui_videoplayerMainWindow):
+    def __init__(self, parent=None):
+        super(PlayerWin, self).__init__(parent)
+        self.setupUi(self)
+
+        self.recordButton.clicked.connect(self.go_record)
+        self.sendButton.clicked.connect(go_next_screen)
+
+    def go_record(self):
+        global widget
+        widget.setCurrentIndex(2)
+
+
+# class VideoPlayerWorker(QThread):
+#     def run(self):
+#         while True:
+
+
 class EndWin(QMainWindow, End.Ui_EndMainWindow):
     def __init__(self, parent=None):
         super(EndWin, self).__init__(parent)
@@ -210,6 +234,7 @@ def start(width=1080, height=1920, cam_=None, bgr_=None, model_=None, tb_video_=
     bgr = bgr_
 
     app = QApplication(sys.argv)
+    app.aboutToQuit.connect(exit)
 
     QFontDatabase.addApplicationFont('design/fonts/TacticSans-Bld.otf')
     stylesheet = open('design/style.qss').read()
@@ -220,11 +245,13 @@ def start(width=1080, height=1920, cam_=None, bgr_=None, model_=None, tb_video_=
     menuWin = MenuWin()
     instructionWin = InstructionWin()
     videoWin = VideoWin()
+    playerWin = PlayerWin()
     endWin = EndWin()
 
     widget.addWidget(menuWin)
     widget.addWidget(instructionWin)
     widget.addWidget(videoWin)
+    widget.addWidget(playerWin)
     widget.addWidget(endWin)
 
     widget.setWindowFlag(Qt.FramelessWindowHint)
