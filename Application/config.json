@@ -10,6 +10,7 @@
   "video_bgr": "./image/background.jpg",
   "target_video": "./video/background.mp4",
   "resolution": "1280 720",
+  "countdown_time": 10,
   "record_time": 15,
   "rotated": true
 }

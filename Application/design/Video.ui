@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>VideoMainWindow</class>
+ <widget class="QMainWindow" name="VideoMainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1080</width>
+    <height>1920</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QLabel" name="videoLabel">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>0</y>
+      <width>1080</width>
+      <height>1920</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: #30363A</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
+   <widget class="QLabel" name="headerLabel">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>0</y>
+      <width>1080</width>
+      <height>189</height>
+     </rect>
+    </property>
+    <property name="pixmap">
+     <pixmap>assets/Header.png</pixmap>
+    </property>
+   </widget>
+   <widget class="QLabel" name="footerLabel">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>1780</y>
+      <width>1080</width>
+      <height>140</height>
+     </rect>
+    </property>
+    <property name="pixmap">
+     <pixmap>assets/Footer.png</pixmap>
+    </property>
+   </widget>
+   <widget class="QLabel" name="prepareLabel">
+    <property name="geometry">
+     <rect>
+      <x>181</x>
+      <y>981</y>
+      <width>718</width>
+      <height>174</height>
+     </rect>
+    </property>
+    <property name="pixmap">
+     <pixmap>assets/PrepareLabel.png</pixmap>
+    </property>
+   </widget>
+   <widget class="QLabel" name="secondsLabel">
+    <property name="geometry">
+     <rect>
+      <x>540</x>
+      <y>1812</y>
+      <width>540</width>
+      <height>108</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>5 sec</string>
+    </property>
+    <property name="textFormat">
+     <enum>Qt::AutoText</enum>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="comandLabel">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>1812</y>
+      <width>540</width>
+      <height>108</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Приготовься...</string>
+    </property>
+    <property name="textFormat">
+     <enum>Qt::AutoText</enum>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

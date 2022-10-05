@@ -1,0 +1,5 @@
+QLabel {
+    font-family: TacticSans-Bld;
+    font-size: 40px;
+    color: #BF8862
+}
