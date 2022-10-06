@@ -1,23 +1,14 @@
 import time
 
-from BackgroundChanger import Camera, Displayer, VideoDataset, cv2_frame_to_cuda
-from CaptureBackground import capture_background
-import json
+from BackgroundChanger import Camera, VideoDataset, cv2_frame_to_cuda
 import cv2
-from os import path
-import torch
 from torch import nn
-from torchvision.transforms import ToTensor
-from model import MattingBase, MattingRefine
 
 import sys
 import uuid
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
-from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
-from PyQt5.QtMultimediaWidgets import QVideoWidget
-import pyshorteners
 
 from design import Menu, End, Instruction, Video, Email
 from ctypes import windll
@@ -27,7 +18,6 @@ import smtplib as smtp
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import yadisk
-import os
 import re
 
 widget: QStackedWidget
@@ -58,7 +48,6 @@ audio_play_path = r'file:///sound\sound.mp3'
 audio_final_path = r'sound\sound.mp3'
 sound_player = vlc.MediaPlayer(audio_play_path)
 audio_background = mpe.AudioFileClip(audio_final_path)
-# server: smtp.SMTP_SSL
 y_disk: yadisk.YaDisk
 
 
@@ -407,7 +396,6 @@ class EmailWin(QMainWindow, Email.Ui_emailMainWindow):
     def __init__(self, parent=None):
         super(EmailWin, self).__init__(parent)
         self.shift = False
-        self.shorter = pyshorteners.Shortener()
         self.setupUi(self)
 
         self.pushButton.clicked.connect(self.button_press)
