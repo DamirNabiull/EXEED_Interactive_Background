@@ -177,6 +177,19 @@ border-color: rgba(0,0,0,0);</string>
      <string/>
     </property>
    </widget>
+   <widget class="QLabel" name="videoPrepareLabel">
+    <property name="geometry">
+     <rect>
+      <x>181</x>
+      <y>981</y>
+      <width>718</width>
+      <height>174</height>
+     </rect>
+    </property>
+    <property name="pixmap">
+     <pixmap>assets/VideoPrepareLabel.png</pixmap>
+    </property>
+   </widget>
    <zorder>videoLabel</zorder>
    <zorder>headerLabel</zorder>
    <zorder>footerLabel</zorder>
@@ -187,6 +200,7 @@ border-color: rgba(0,0,0,0);</string>
    <zorder>recordButton</zorder>
    <zorder>sendButton</zorder>
    <zorder>playButton</zorder>
+   <zorder>videoPrepareLabel</zorder>
   </widget>
  </widget>
  <resources/>

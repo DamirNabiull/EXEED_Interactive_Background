@@ -17,10 +17,18 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
 from PyQt5.QtMultimediaWidgets import QVideoWidget
+import pyshorteners
 
-from design import Menu, End, Instruction, Video, Player
+from design import Menu, End, Instruction, Video, Email
 from ctypes import windll
 import vlc
+import moviepy.editor as mpe
+import smtplib as smtp
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+import yadisk
+import os
+import re
 
 widget: QStackedWidget
 cam: Camera
@@ -32,14 +40,26 @@ tb_video: VideoDataset
 bgr = None
 current_id: str
 video_path: str
+final_video: str
+video_url: str
+email: str
+smtp_pass: str
+token: str
 WIDTH: int
 HEIGHT: int
+to_send_email: str
+to_send_email = ''
 MENU_INDEX = 0
 VIDEO_INDEX = 2
 PLAYER_INDEX = 3
 PIC_WIDTH = 1080
 PIC_HEIGHT = 1920
-sound_player = vlc.MediaPlayer(r'file:///..\Application\sound\sound.mp3')
+audio_play_path = r'file:///sound\sound.mp3'
+audio_final_path = r'sound\sound.mp3'
+sound_player = vlc.MediaPlayer(audio_play_path)
+audio_background = mpe.AudioFileClip(audio_final_path)
+# server: smtp.SMTP_SSL
+y_disk: yadisk.YaDisk
 
 
 def go_next_screen():
@@ -55,6 +75,24 @@ def go_to_menu():
 def go_record():
     global widget
     widget.setCurrentIndex(VIDEO_INDEX)
+
+
+def prepare_video():
+    global video_path, final_video, audio_background
+    my_clip = mpe.VideoFileClip(video_path)
+    final_clip = my_clip.set_audio(audio_background)
+    final_video = fr'final\{current_id}.mp4'
+    final_clip.write_videofile(final_video, codec='mpeg4', audio_codec='libvorbis')
+    upload_video()
+
+
+def upload_video():
+    global video_url, y_disk
+    dir = config['disk_dir']
+    dest_path = f'/{dir}/{current_id}.mp4'
+    y_disk.upload(final_video, dest_path)
+    video_url = y_disk.get_download_link(dest_path)
+    print(video_url)
 
 
 class MenuWin(QMainWindow, Menu.Ui_MenuMainWindow):
@@ -86,12 +124,16 @@ class VideoWorker(QThread):
     start_player = pyqtSignal()
     enable_play_butt = pyqtSignal()
     disable_play_butt = pyqtSignal()
+    prepare_video_show = pyqtSignal()
+    stop_recording_sig = pyqtSignal()
     height: int
     width: int
     frame_num: int
     rotated: bool
     frame_array: list
 
+    stop_rec: bool
+    stoped: bool
     in_player: bool
     is_play: bool
     video_uploaded: bool
@@ -107,15 +149,25 @@ class VideoWorker(QThread):
         self.frame_array = []
         self.frame_num = 0
         self.video_uploaded = False
+        self.stoped = False
         self.in_player = False
         self.is_play = False
+        self.stop_rec = False
         self.fps = 0
         if self.rotated:
             self.height = WIDTH
             self.width = HEIGHT
 
         while True:
-            if widget.currentIndex() == VIDEO_INDEX and (not self.in_player):
+            if self.stop_rec and widget.currentIndex() == VIDEO_INDEX:
+                prev = time.time()
+                while time.time() - prev < 1:
+                    pass
+                self.stop_rec = False
+                self.stoped = True
+                self.stop_recording_sig.emit()
+
+            if widget.currentIndex() == VIDEO_INDEX and (not self.in_player) and (not self.stoped):
                 self.video_uploaded = False
                 self.frame_array = []
                 self.frame_num = 0
@@ -199,15 +251,16 @@ class VideoWorker(QThread):
         print('Set Play')
 
     def unset_player(self):
-        self.enable_play_butt.emit()
         sound_player.stop()
         print('Unset player')
         self.cap.release()
+        self.is_play = False
         self.in_player = False
 
     def stop_recording(self):
+        self.prepare_video_show.emit()
+        self.stop_rec = True
         self.unset_player()
-        go_next_screen()
 
     def update_pic(self, frame):
         Image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -259,7 +312,6 @@ class VideoWorker(QThread):
 
 class VideoWin(QMainWindow, Video.Ui_VideoMainWindow):
     def __init__(self, parent=None):
-
         super(VideoWin, self).__init__(parent)
         self.setupUi(self)
         self.hide_player()
@@ -271,6 +323,9 @@ class VideoWin(QMainWindow, Video.Ui_VideoMainWindow):
         self.videoUpdater.start_prepare.connect(self.start_prepare)
         self.videoUpdater.start_record.connect(self.start_recording)
         self.videoUpdater.start_player.connect(self.start_player)
+        self.videoUpdater.stop_recording_sig.connect(self.stop_recording)
+
+        self.videoUpdater.prepare_video_show.connect(self.prepare_video_show)
 
         self.videoUpdater.enable_play_butt.connect(self.enable_play_butt)
         self.videoUpdater.disable_play_butt.connect(self.disable_play_butt)
@@ -278,6 +333,16 @@ class VideoWin(QMainWindow, Video.Ui_VideoMainWindow):
         self.recordButton.clicked.connect(self.videoUpdater.unset_player)
         self.playButton.clicked.connect(self.videoUpdater.set_play)
         self.sendButton.clicked.connect(self.videoUpdater.stop_recording)
+
+    def stop_recording(self):
+        go_next_screen()
+        print('Prepare')
+        prepare_video()
+        print('Prepare end')
+        self.videoUpdater.stoped = False
+
+    def prepare_video_show(self):
+        self.videoPrepareLabel.show()
 
     def disable_play_butt(self):
         self.playButton.setDisabled(True)
@@ -292,6 +357,7 @@ class VideoWin(QMainWindow, Video.Ui_VideoMainWindow):
         self.secondsLabel.hide()
 
     def hide_player(self):
+        self.videoPrepareLabel.hide()
         self.playerFooterLabel.hide()
         self.playButton.hide()
         self.recordButton.hide()
@@ -335,6 +401,107 @@ class VideoWin(QMainWindow, Video.Ui_VideoMainWindow):
         exit()
 
 
+class EmailWin(QMainWindow, Email.Ui_emailMainWindow):
+    shift: bool
+
+    def __init__(self, parent=None):
+        super(EmailWin, self).__init__(parent)
+        self.shift = False
+        self.shorter = pyshorteners.Shortener()
+        self.setupUi(self)
+
+        self.pushButton.clicked.connect(self.button_press)
+        self.pushButton_2.clicked.connect(self.button_press)
+        self.pushButton_3.clicked.connect(self.button_press)
+        self.pushButton_4.clicked.connect(self.button_press)
+        self.pushButton_5.clicked.connect(self.button_press)
+        self.pushButton_6.clicked.connect(self.button_press)
+        self.pushButton_7.clicked.connect(self.button_press)
+        self.pushButton_8.clicked.connect(self.button_press)
+        self.pushButton_9.clicked.connect(self.button_press)
+        self.pushButton_10.clicked.connect(self.button_press)
+        self.pushButton_11.clicked.connect(self.button_press)
+        self.pushButton_12.clicked.connect(self.button_press)
+        self.pushButton_13.clicked.connect(self.button_press)
+        self.pushButton_14.clicked.connect(self.button_press)
+        self.pushButton_15.clicked.connect(self.button_press)
+        self.pushButton_16.clicked.connect(self.button_press)
+        self.pushButton_17.clicked.connect(self.button_press)
+        self.pushButton_18.clicked.connect(self.button_press)
+        self.pushButton_19.clicked.connect(self.button_press)
+        self.pushButton_20.clicked.connect(self.button_press)
+        self.pushButton_21.clicked.connect(self.button_press)
+        self.pushButton_22.clicked.connect(self.button_press)
+        self.pushButton_23.clicked.connect(self.button_press)
+        self.pushButton_24.clicked.connect(self.button_press)
+        self.pushButton_25.clicked.connect(self.button_press)
+        self.pushButton_26.clicked.connect(self.button_press)
+        self.pushButton_27.clicked.connect(self.button_press)
+        self.pushButton_28.clicked.connect(self.button_press)
+        self.pushButton_29.clicked.connect(self.button_press)
+        self.pushButton_30.clicked.connect(self.button_press)
+        self.pushButton_31.clicked.connect(self.button_press)
+        self.pushButton_32.clicked.connect(self.button_press)
+        self.pushButton_33.clicked.connect(self.button_press)
+        self.pushButton_34.clicked.connect(self.button_press)
+        self.pushButton_35.clicked.connect(self.button_press)
+        self.pushButton_36.clicked.connect(self.button_press)
+        self.pushButton_37.clicked.connect(self.button_press)
+        self.pushButton_38.clicked.connect(self.button_press)
+        self.pushButton_39.clicked.connect(self.button_press)
+        self.pushButton_40.clicked.connect(self.button_press)
+
+        self.backspaceButton.clicked.connect(self.backspace_press)
+        self.shiftButton.clicked.connect(self.shift_press)
+
+        self.sendEmailButton.clicked.connect(self.send_press)
+
+    def shift_press(self):
+        self.shift = not self.shift
+
+    def backspace_press(self):
+        global to_send_email
+        if len(to_send_email) > 0:
+            to_send_email = to_send_email[:-1]
+        self.label.setText(to_send_email)
+
+    def button_press(self):
+        global to_send_email
+        sending_button = self.sender()
+        char = sending_button.text()
+        if self.shift and char.isalpha():
+            to_send_email += char.upper()
+        else:
+            to_send_email += char
+        self.label.setText(to_send_email)
+
+    def send_press(self):
+        global to_send_email, video_url, email
+        print('Send started')
+        self.label.setText('')
+        print(email)
+        if not re.match(r"[^@]+@[^@]+\.[^@]+", to_send_email):
+            pass
+        else:
+            server = smtp.SMTP_SSL('smtp.yandex.com', 465)
+            server.set_debuglevel(1)
+            server.ehlo(email)
+            server.login(email, smtp_pass)
+            server.auth_plain()
+            msg = MIMEMultipart('alternative')
+            msg['Subject'] = "Exeed Video"
+            msg['From'] = email
+            msg['To'] = to_send_email
+            part1 = MIMEText(video_url, 'plain')
+            msg.attach(part1)
+
+            server.sendmail(email, to_send_email, msg.as_string())
+            server.quit()
+        to_send_email = ''
+        print('Send ended')
+        go_next_screen()
+
+
 class EndWin(QMainWindow, End.Ui_EndMainWindow):
     def __init__(self, parent=None):
         super(EndWin, self).__init__(parent)
@@ -342,8 +509,10 @@ class EndWin(QMainWindow, End.Ui_EndMainWindow):
         self.endButton.clicked.connect(go_to_menu)
 
 
-def start(width=1080, height=1920, cam_=None, bgr_=None, model_=None, tb_video_=None, config_=None, c_t=10, r_t=15):
-    global widget, cam, countdown_time, record_time, config, model, tb_video, bgr, WIDTH, HEIGHT, videoUpdaterThread
+def start(width=1080, height=1920, cam_=None, bgr_=None, model_=None, tb_video_=None, config_=None, c_t=10, r_t=15,
+          smtp_pass_='', token_=''):
+    global widget, cam, countdown_time, record_time, config, model, tb_video, bgr, WIDTH, HEIGHT, email, smtp_pass, \
+        token, y_disk
 
     WIDTH = width
     HEIGHT = height
@@ -354,6 +523,13 @@ def start(width=1080, height=1920, cam_=None, bgr_=None, model_=None, tb_video_=
     model = model_
     tb_video = tb_video_
     bgr = bgr_
+    email = config['login']
+    print(email)
+    smtp_pass = smtp_pass_
+    token = token_
+
+    y_disk = yadisk.YaDisk(token=token)
+    print(y_disk.check_token())
 
     app = QApplication(sys.argv)
     app.aboutToQuit.connect(exit)
@@ -367,13 +543,13 @@ def start(width=1080, height=1920, cam_=None, bgr_=None, model_=None, tb_video_=
     menuWin = MenuWin()
     instructionWin = InstructionWin()
     videoWin = VideoWin()
-    # playerWin = PlayerWin()
+    emailWin = EmailWin()
     endWin = EndWin()
 
     widget.addWidget(menuWin)
     widget.addWidget(instructionWin)
     widget.addWidget(videoWin)
-    # widget.addWidget(playerWin)
+    widget.addWidget(emailWin)
     widget.addWidget(endWin)
 
     widget.setWindowFlag(Qt.FramelessWindowHint)

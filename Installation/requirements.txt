@@ -10,3 +10,9 @@ PyQt5>=5.15.7
 numpy>=1.23.3
 Pillow>=9.2.0
 python-vlc
+moviepy
+yadisk
+cryptography
+py3-validate-email
+pyshorteners
+mime

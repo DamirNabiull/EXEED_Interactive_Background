@@ -12,5 +12,9 @@
   "resolution": "1280 720",
   "countdown_time": 10,
   "record_time": 15,
-  "rotated": true
+  "rotated": true,
+  "login": "exeedbornformore@yandex.ru",
+  "smtp_pass": "gAAAAABjPyIcMPWzFLErSvfM6cijWdiCko-w0ymJZCjhPxl81uvXbeoW8uqXsd1jekRKoBUudLyefwramJHnnD0m4dq-h_WI-cU0T4yf45NyGJkvALzoBD8=",
+  "disk_dir": "ExeedVideos",
+  "token": "gAAAAABjPyIcxPkpkXd0m1ZkvukStii1g_J6-WBBKbEjOuEOUvYk6J_44bbDBg1SqnFJbGFhTGNpt7coWDjIXWQxabx9v3NsEiGexl1rdbY91fc2UZnGHXLuZCvS6-rOnFdCFrybYswpB5bk8AzuwcuWsi0TQOeFUg=="
 }

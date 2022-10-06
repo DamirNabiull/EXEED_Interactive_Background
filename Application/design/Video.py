@@ -72,6 +72,10 @@ class Ui_VideoMainWindow(object):
 "border-color: rgba(0,0,0,0);")
         self.sendButton.setText("")
         self.sendButton.setObjectName("sendButton")
+        self.videoPrepareLabel = QtWidgets.QLabel(self.centralwidget)
+        self.videoPrepareLabel.setGeometry(QtCore.QRect(181, 981, 718, 174))
+        self.videoPrepareLabel.setPixmap(QtGui.QPixmap("design/assets/VideoPrepareLabel.png"))
+        self.videoPrepareLabel.setObjectName("videoPrepareLabel")
         self.videoLabel.raise_()
         self.headerLabel.raise_()
         self.footerLabel.raise_()
@@ -82,6 +86,7 @@ class Ui_VideoMainWindow(object):
         self.recordButton.raise_()
         self.sendButton.raise_()
         self.playButton.raise_()
+        self.videoPrepareLabel.raise_()
         VideoMainWindow.setCentralWidget(self.centralwidget)
 
         self.retranslateUi(VideoMainWindow)

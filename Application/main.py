@@ -6,12 +6,15 @@ from os import path
 import torch
 from torchvision.transforms import ToTensor
 from model import MattingBase, MattingRefine
+from cryptography.fernet import Fernet
 
 import app
 
 # --------------- Main ---------------
 
 config = json.load(open('config.json'))
+key = b'-HzoIZjl0UaJfzRdTW-LD-ik9q96yvEioeH9RME1XHs='
+cipher_suite = Fernet(key)
 
 # Load model
 model = None
@@ -47,6 +50,8 @@ else:
         bgr = cv2.rotate(bgr, cv2.ROTATE_90_CLOCKWISE)
     bgr = cv2_frame_to_cuda(bgr)
 
-
 if __name__ == "__main__":
-    app.start(WIDTH, HEIGHT, cam, bgr, model, tb_video, config, config['countdown_time'], config['record_time'])
+    smtp_pass = cipher_suite.decrypt(config['smtp_pass'].encode()).decode()
+    token = cipher_suite.decrypt(config['token'].encode()).decode()
+    app.start(WIDTH, HEIGHT, cam, bgr, model, tb_video, config, config['countdown_time'], config['record_time'],
+              smtp_pass, token)
