@@ -534,6 +534,7 @@ def start(width=1080, height=1920, cam_=None, bgr_=None, model_=None, tb_video_=
     app = QApplication(sys.argv)
     app.aboutToQuit.connect(exit)
 
+    QFontDatabase.addApplicationFont('design/fonts/TacticSans-Reg.otf')
     QFontDatabase.addApplicationFont('design/fonts/TacticSans-Bld.otf')
     stylesheet = open('design/style.qss').read()
     app.setStyleSheet(stylesheet)
