@@ -44,6 +44,44 @@ class Ui_VideoMainWindow(object):
         self.comandLabel.setTextFormat(QtCore.Qt.AutoText)
         self.comandLabel.setAlignment(QtCore.Qt.AlignCenter)
         self.comandLabel.setObjectName("comandLabel")
+        self.playButton = QtWidgets.QPushButton(self.centralwidget)
+        self.playButton.setGeometry(QtCore.QRect(360, 1810, 360, 108))
+        self.playButton.setStyleSheet("background-image: url(design/assets/PlayButton.png);\n"
+"border-style: outset;\n"
+"border-width: 0px;\n"
+"border-color: rgba(0,0,0,0);")
+        self.playButton.setText("")
+        self.playButton.setObjectName("playButton")
+        self.playerFooterLabel = QtWidgets.QLabel(self.centralwidget)
+        self.playerFooterLabel.setGeometry(QtCore.QRect(0, 1810, 1080, 110))
+        self.playerFooterLabel.setPixmap(QtGui.QPixmap("design/assets/Footer3.png"))
+        self.playerFooterLabel.setObjectName("playerFooterLabel")
+        self.recordButton = QtWidgets.QPushButton(self.centralwidget)
+        self.recordButton.setGeometry(QtCore.QRect(0, 1810, 360, 108))
+        self.recordButton.setStyleSheet("background-image: url(design/assets/RerecordButton.png);\n"
+"border-style: outset;\n"
+"border-width: 0px;\n"
+"border-color: rgba(0,0,0,0);")
+        self.recordButton.setText("")
+        self.recordButton.setObjectName("recordButton")
+        self.sendButton = QtWidgets.QPushButton(self.centralwidget)
+        self.sendButton.setGeometry(QtCore.QRect(720, 1810, 360, 108))
+        self.sendButton.setStyleSheet("background-image: url(design/assets/SendButton.png);\n"
+"border-style: outset;\n"
+"border-width: 0px;\n"
+"border-color: rgba(0,0,0,0);")
+        self.sendButton.setText("")
+        self.sendButton.setObjectName("sendButton")
+        self.videoLabel.raise_()
+        self.headerLabel.raise_()
+        self.footerLabel.raise_()
+        self.prepareLabel.raise_()
+        self.secondsLabel.raise_()
+        self.comandLabel.raise_()
+        self.playerFooterLabel.raise_()
+        self.recordButton.raise_()
+        self.sendButton.raise_()
+        self.playButton.raise_()
         VideoMainWindow.setCentralWidget(self.centralwidget)
 
         self.retranslateUi(VideoMainWindow)
