@@ -39,6 +39,7 @@ VIDEO_INDEX = 2
 PLAYER_INDEX = 3
 PIC_WIDTH = 1080
 PIC_HEIGHT = 1920
+sound_player = vlc.MediaPlayer(r'file:///..\Application\sound\sound.mp3')
 
 
 def go_next_screen():
@@ -83,6 +84,8 @@ class VideoWorker(QThread):
     start_prepare = pyqtSignal()
     start_record = pyqtSignal()
     start_player = pyqtSignal()
+    enable_play_butt = pyqtSignal()
+    disable_play_butt = pyqtSignal()
     height: int
     width: int
     frame_num: int
@@ -97,7 +100,7 @@ class VideoWorker(QThread):
     sec_to_frame: float
 
     def run(self):
-        global WIDTH, HEIGHT, config, countdown_time, record_time, current_id
+        global WIDTH, HEIGHT, config, countdown_time, record_time, current_id, sound_player
         self.rotated = config['rotated']
         self.height = HEIGHT
         self.width = WIDTH
@@ -130,6 +133,7 @@ class VideoWorker(QThread):
                 self.start_record.emit()
                 prev = time.time()
                 delta = time.time() - prev
+                sound_player.play()
                 while delta < record_time:
                     frame = self.get_frame()
                     res = self.add_background(frame)
@@ -138,6 +142,7 @@ class VideoWorker(QThread):
                     self.start_timer.emit(record_time, int(delta))
                     delta = time.time() - prev
 
+                sound_player.stop()
                 self.save_video()
                 # go_next_screen()
                 self.in_player = True
@@ -153,16 +158,19 @@ class VideoWorker(QThread):
                     print(self.fps)
 
                 self.start_player.emit()
+                self.disable_play_butt.emit()
 
                 if self.is_play:
                     self.is_play = False
                     ended = False
                     prev = time.time()
+                    sound_player.play()
                     while self.cap.isOpened():
                         if widget.currentIndex() != VIDEO_INDEX:
                             self.unset_player()
                             break
                         if ended and (not self.is_play):
+                            self.enable_play_butt.emit()
                             continue
 
                         delta = time.time() - prev
@@ -184,10 +192,15 @@ class VideoWorker(QThread):
                             ended = True
 
     def set_play(self):
+        self.disable_play_butt.emit()
+        sound_player.stop()
+        sound_player.play()
         self.is_play = True
         print('Set Play')
 
     def unset_player(self):
+        self.enable_play_butt.emit()
+        sound_player.stop()
         print('Unset player')
         self.cap.release()
         self.in_player = False
@@ -259,9 +272,18 @@ class VideoWin(QMainWindow, Video.Ui_VideoMainWindow):
         self.videoUpdater.start_record.connect(self.start_recording)
         self.videoUpdater.start_player.connect(self.start_player)
 
+        self.videoUpdater.enable_play_butt.connect(self.enable_play_butt)
+        self.videoUpdater.disable_play_butt.connect(self.disable_play_butt)
+
         self.recordButton.clicked.connect(self.videoUpdater.unset_player)
         self.playButton.clicked.connect(self.videoUpdater.set_play)
         self.sendButton.clicked.connect(self.videoUpdater.stop_recording)
+
+    def disable_play_butt(self):
+        self.playButton.setDisabled(True)
+
+    def enable_play_butt(self):
+        self.playButton.setDisabled(False)
 
     def hide_record(self):
         self.prepareLabel.hide()
