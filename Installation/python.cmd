@@ -1,4 +1,4 @@
-pip install torch==1.12.0+cu113 torchvision==0.11.2+cu113 torchaudio===0.12.1+cu113 -f https://download.pytorch.org/whl/torch_stable.html
+pip install torch==1.12.0+cu113 torchvision==0.13.0+cu113 torchaudio===0.12.0+cu113 -f https://download.pytorch.org/whl/torch_stable.html
 pip install kornia
 pip install tensorboard
 pip install tqdm
@@ -12,3 +12,4 @@ pip install moviepy
 pip install yadisk
 pip install cryptography
 pip install mime
+pip install aiohttp
