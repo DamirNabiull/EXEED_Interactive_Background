@@ -1,5 +1,3 @@
-import time
-
 from BackgroundChanger import Camera, VideoDataset, cv2_frame_to_cuda
 import cv2
 from torch import nn
@@ -10,15 +8,13 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 
+from multiprocessing.dummy import Pool
 from design import Menu, End, Instruction, Video, Email
 from ctypes import windll
 import vlc
-import moviepy.editor as mpe
-import smtplib as smtp
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-import yadisk
-import re
+import os
+import requests
+import time
 
 widget: QStackedWidget
 cam: Camera
@@ -47,8 +43,7 @@ PIC_HEIGHT = 1920
 audio_play_path = r'file:///sound\sound.mp3'
 audio_final_path = r'sound\sound.mp3'
 sound_player = vlc.MediaPlayer(audio_play_path)
-audio_background = mpe.AudioFileClip(audio_final_path)
-y_disk: yadisk.YaDisk
+thread_pool = Pool(7)
 
 
 def go_next_screen():
@@ -57,7 +52,7 @@ def go_next_screen():
 
 
 def go_to_menu():
-    global widget
+    global widgetd
     widget.setCurrentIndex(MENU_INDEX)
 
 
@@ -68,20 +63,10 @@ def go_record():
 
 def prepare_video():
     global video_path, final_video, audio_background
-    my_clip = mpe.VideoFileClip(video_path)
-    final_clip = my_clip.set_audio(audio_background)
+    print('FINAL VIDEO PREPARE')
     final_video = fr'final\{current_id}.mp4'
-    final_clip.write_videofile(final_video, codec='mpeg4', audio_codec='libvorbis')
-    upload_video()
-
-
-def upload_video():
-    global video_url, y_disk
-    dir = config['disk_dir']
-    dest_path = f'/{dir}/{current_id}.mp4'
-    y_disk.upload(final_video, dest_path)
-    video_url = y_disk.get_download_link(dest_path)
-    print(video_url)
+    os.system(f'ffmpeg.exe -i {video_path} -i {audio_final_path} -vcodec libx264 -acodec aac -map 0:v:0 -map 1:a:0 {final_video}')
+    print('FINAL VIDEO IS READY')
 
 
 class MenuWin(QMainWindow, Menu.Ui_MenuMainWindow):
@@ -154,7 +139,15 @@ class VideoWorker(QThread):
                     pass
                 self.stop_rec = False
                 self.stoped = True
-                self.stop_recording_sig.emit()
+                # self.stop_recording_sig.emit()
+                prepare_video()
+                go_next_screen()
+                prev = time.time()
+                delta = time.time() - prev
+                while delta < 3:
+                    delta = time.time() - prev
+                self.stoped = False
+                continue
 
             if widget.currentIndex() == VIDEO_INDEX and (not self.in_player) and (not self.stoped):
                 self.video_uploaded = False
@@ -324,11 +317,7 @@ class VideoWin(QMainWindow, Video.Ui_VideoMainWindow):
         self.sendButton.clicked.connect(self.videoUpdater.stop_recording)
 
     def stop_recording(self):
-        go_next_screen()
-        print('Prepare')
-        prepare_video()
-        print('Prepare end')
-        self.videoUpdater.stoped = False
+        pass
 
     def prepare_video_show(self):
         self.videoPrepareLabel.show()
@@ -454,7 +443,7 @@ class EmailWin(QMainWindow, Email.Ui_emailMainWindow):
         self.label.setText(to_send_email)
 
     def button_press(self):
-        global to_send_email
+        global to_send_email, final_video, current_id
         sending_button = self.sender()
         char = sending_button.text()
         if self.shift and char.isalpha():
@@ -467,27 +456,25 @@ class EmailWin(QMainWindow, Email.Ui_emailMainWindow):
         global to_send_email, video_url, email
         print('Send started')
         self.label.setText('')
-        print(email)
-        if not re.match(r"[^@]+@[^@]+\.[^@]+", to_send_email):
-            pass
-        else:
-            server = smtp.SMTP_SSL('smtp.yandex.com', 465)
-            server.set_debuglevel(1)
-            server.ehlo(email)
-            server.login(email, smtp_pass)
-            server.auth_plain()
-            msg = MIMEMultipart('alternative')
-            msg['Subject'] = "Exeed Video"
-            msg['From'] = email
-            msg['To'] = to_send_email
-            part1 = MIMEText(video_url, 'plain')
-            msg.attach(part1)
+        url = 'http://localhost:8080/uploadAndSend'
+        data = {
+            'final_video': final_video,
+            'to_send_email': to_send_email,
+            'current_id': current_id
+        }
 
-            server.sendmail(email, to_send_email, msg.as_string())
-            server.quit()
+        thread_pool.apply_async(post_req, args=(url, data), callback=custom_callback)
+
         to_send_email = ''
-        print('Send ended')
         go_next_screen()
+
+
+def post_req(url, js):
+    requests.post(url, json=js)
+
+
+def custom_callback(result):
+    pass
 
 
 class EndWin(QMainWindow, End.Ui_EndMainWindow):
@@ -497,10 +484,8 @@ class EndWin(QMainWindow, End.Ui_EndMainWindow):
         self.endButton.clicked.connect(go_to_menu)
 
 
-def start(width=1080, height=1920, cam_=None, bgr_=None, model_=None, tb_video_=None, config_=None, c_t=10, r_t=15,
-          smtp_pass_='', token_=''):
-    global widget, cam, countdown_time, record_time, config, model, tb_video, bgr, WIDTH, HEIGHT, email, smtp_pass, \
-        token, y_disk
+def start(width=1080, height=1920, cam_=None, bgr_=None, model_=None, tb_video_=None, config_=None, c_t=10, r_t=15):
+    global widget, cam, countdown_time, record_time, config, model, tb_video, bgr, WIDTH, HEIGHT
 
     WIDTH = width
     HEIGHT = height
@@ -511,13 +496,6 @@ def start(width=1080, height=1920, cam_=None, bgr_=None, model_=None, tb_video_=
     model = model_
     tb_video = tb_video_
     bgr = bgr_
-    email = config['login']
-    print(email)
-    smtp_pass = smtp_pass_
-    token = token_
-
-    y_disk = yadisk.YaDisk(token=token)
-    print(y_disk.check_token())
 
     app = QApplication(sys.argv)
     app.aboutToQuit.connect(exit)
