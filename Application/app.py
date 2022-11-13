@@ -313,7 +313,7 @@ class VideoWin(QMainWindow, Video.Ui_VideoMainWindow):
         self.videoUpdater.disable_play_butt.connect(self.disable_play_butt)
 
         self.recordButton.clicked.connect(self.videoUpdater.unset_player)
-        self.playButton.clicked.connect(self.videoUpdater.set_play)
+        # self.playButton.clicked.connect(self.videoUpdater.set_play)
         self.sendButton.clicked.connect(self.videoUpdater.stop_recording)
 
     def stop_recording(self):
@@ -349,7 +349,7 @@ class VideoWin(QMainWindow, Video.Ui_VideoMainWindow):
 
     def show_player(self):
         self.playerFooterLabel.show()
-        self.playButton.show()
+        # self.playButton.show()
         self.recordButton.show()
         self.sendButton.show()
 

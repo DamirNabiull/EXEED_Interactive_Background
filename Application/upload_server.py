@@ -47,8 +47,19 @@ async def post_upload(request):
         msg['Subject'] = "Exeed Video"
         msg['From'] = email
         msg['To'] = to_send_email
-        part1 = MIMEText(video_url, 'plain')
-        msg.attach(part1)
+        msg_text = MIMEText(f'''<p>
+Спасибо, что посетили шоурум EXEED! Скачать ваше видео и поделиться в социальных сетях вы сможете по <a href="{video_url}"><u>ссылке</u></a>
+<br><br>
+Надеемся, что вам понравилось время, которое вы провели с нами. Еще больше информации о модельном ряде, комплектациях и дополнительных сервисах вы сможете узнать на сайте <a href="https://exeed.ru/">exeed.ru</a>
+<br><br>
+Найти дилера в своем городе и узнать больше о автомобилях в наличии и ценах:<br>
+<a href="https://exeed.ru/dealers/">exeed.ru/dealers</a>
+<br><br>
+С наилучшими пожеланиями,<br>
+команда EXEED Россия
+</p>''', 'html')
+        # part1 = MIMEText(video_url, 'plain')
+        msg.attach(msg_text)
 
         server.sendmail(email, to_send_email, msg.as_string())
         server.quit()

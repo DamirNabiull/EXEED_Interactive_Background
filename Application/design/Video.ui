@@ -57,6 +57,9 @@
     </property>
    </widget>
    <widget class="QLabel" name="prepareLabel">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>181</x>
@@ -89,6 +92,9 @@
     </property>
    </widget>
    <widget class="QLabel" name="comandLabel">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>0</x>
@@ -127,16 +133,19 @@ border-color: rgba(0,0,0,0);</string>
     </property>
    </widget>
    <widget class="QLabel" name="playerFooterLabel">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>0</x>
-      <y>1810</y>
+      <y>1780</y>
       <width>1080</width>
-      <height>110</height>
+      <height>140</height>
      </rect>
     </property>
     <property name="pixmap">
-     <pixmap>assets/Footer3.png</pixmap>
+     <pixmap>assets/Footer.png</pixmap>
     </property>
    </widget>
    <widget class="QPushButton" name="recordButton">
@@ -144,7 +153,7 @@ border-color: rgba(0,0,0,0);</string>
      <rect>
       <x>0</x>
       <y>1810</y>
-      <width>360</width>
+      <width>540</width>
       <height>108</height>
      </rect>
     </property>
@@ -161,9 +170,9 @@ border-color: rgba(0,0,0,0);</string>
    <widget class="QPushButton" name="sendButton">
     <property name="geometry">
      <rect>
-      <x>720</x>
+      <x>540</x>
       <y>1810</y>
-      <width>360</width>
+      <width>540</width>
       <height>108</height>
      </rect>
     </property>
@@ -180,9 +189,9 @@ border-color: rgba(0,0,0,0);</string>
    <widget class="QLabel" name="videoPrepareLabel">
     <property name="geometry">
      <rect>
-      <x>181</x>
+      <x>198</x>
       <y>981</y>
-      <width>718</width>
+      <width>701</width>
       <height>174</height>
      </rect>
     </property>

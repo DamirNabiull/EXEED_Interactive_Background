@@ -31,6 +31,7 @@ class Ui_VideoMainWindow(object):
         self.footerLabel.setPixmap(QtGui.QPixmap("design/assets/Footer.png"))
         self.footerLabel.setObjectName("footerLabel")
         self.prepareLabel = QtWidgets.QLabel(self.centralwidget)
+        self.prepareLabel.setEnabled(True)
         self.prepareLabel.setGeometry(QtCore.QRect(181, 981, 718, 174))
         self.prepareLabel.setPixmap(QtGui.QPixmap("design/assets/PrepareLabel.png"))
         self.prepareLabel.setObjectName("prepareLabel")
@@ -40,6 +41,7 @@ class Ui_VideoMainWindow(object):
         self.secondsLabel.setAlignment(QtCore.Qt.AlignCenter)
         self.secondsLabel.setObjectName("secondsLabel")
         self.comandLabel = QtWidgets.QLabel(self.centralwidget)
+        self.comandLabel.setEnabled(True)
         self.comandLabel.setGeometry(QtCore.QRect(0, 1812, 540, 108))
         self.comandLabel.setTextFormat(QtCore.Qt.AutoText)
         self.comandLabel.setAlignment(QtCore.Qt.AlignCenter)
@@ -53,11 +55,12 @@ class Ui_VideoMainWindow(object):
         self.playButton.setText("")
         self.playButton.setObjectName("playButton")
         self.playerFooterLabel = QtWidgets.QLabel(self.centralwidget)
-        self.playerFooterLabel.setGeometry(QtCore.QRect(0, 1810, 1080, 110))
-        self.playerFooterLabel.setPixmap(QtGui.QPixmap("design/assets/Footer3.png"))
+        self.playerFooterLabel.setEnabled(True)
+        self.playerFooterLabel.setGeometry(QtCore.QRect(0, 1780, 1080, 140))
+        self.playerFooterLabel.setPixmap(QtGui.QPixmap("design/assets/Footer.png"))
         self.playerFooterLabel.setObjectName("playerFooterLabel")
         self.recordButton = QtWidgets.QPushButton(self.centralwidget)
-        self.recordButton.setGeometry(QtCore.QRect(0, 1810, 360, 108))
+        self.recordButton.setGeometry(QtCore.QRect(0, 1810, 540, 108))
         self.recordButton.setStyleSheet("background-image: url(design/assets/RerecordButton.png);\n"
 "border-style: outset;\n"
 "border-width: 0px;\n"
@@ -65,7 +68,7 @@ class Ui_VideoMainWindow(object):
         self.recordButton.setText("")
         self.recordButton.setObjectName("recordButton")
         self.sendButton = QtWidgets.QPushButton(self.centralwidget)
-        self.sendButton.setGeometry(QtCore.QRect(720, 1810, 360, 108))
+        self.sendButton.setGeometry(QtCore.QRect(540, 1810, 540, 108))
         self.sendButton.setStyleSheet("background-image: url(design/assets/SendButton.png);\n"
 "border-style: outset;\n"
 "border-width: 0px;\n"
@@ -73,7 +76,7 @@ class Ui_VideoMainWindow(object):
         self.sendButton.setText("")
         self.sendButton.setObjectName("sendButton")
         self.videoPrepareLabel = QtWidgets.QLabel(self.centralwidget)
-        self.videoPrepareLabel.setGeometry(QtCore.QRect(181, 981, 718, 174))
+        self.videoPrepareLabel.setGeometry(QtCore.QRect(198, 981, 701, 174))
         self.videoPrepareLabel.setPixmap(QtGui.QPixmap("design/assets/VideoPrepareLabel.png"))
         self.videoPrepareLabel.setObjectName("videoPrepareLabel")
         self.videoLabel.raise_()
