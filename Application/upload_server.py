@@ -32,16 +32,17 @@ async def post_upload(request):
         print(e)
     print('UPLOADED')
 
+    video_url = y_disk.get_download_link(dest_path)
+    print('GET DOWNLOAD LINK')
+    print(video_url)
+
     url_ = y_disk.publish(dest_path)
     print(url_)
     meta = y_disk.get_meta(dest_path)
+    # print(meta)
     video_url = meta['public_url']
     print('GET LINK')
     print(video_url)
-
-    # video_url = y_disk.get_download_link(dest_path)
-    # print('GET LINK')
-    # print(video_url)
 
     print('Send started')
 
