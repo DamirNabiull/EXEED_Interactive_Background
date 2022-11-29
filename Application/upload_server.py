@@ -13,6 +13,8 @@ smtp_pass: str
 token: str
 
 routes = web.RouteTableDef()
+
+
 @routes.post("/uploadAndSend")
 async def post_upload(request):
     global y_disk, email, smtp_pass
@@ -29,9 +31,17 @@ async def post_upload(request):
     except Exception as e:
         print(e)
     print('UPLOADED')
-    video_url = y_disk.get_download_link(dest_path)
+
+    url_ = y_disk.publish(dest_path)
+    print(url_)
+    meta = y_disk.get_meta(dest_path)
+    video_url = meta['public_url']
     print('GET LINK')
     print(video_url)
+
+    # video_url = y_disk.get_download_link(dest_path)
+    # print('GET LINK')
+    # print(video_url)
 
     print('Send started')
 
