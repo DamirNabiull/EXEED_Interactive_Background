@@ -37,7 +37,7 @@ async def post_upload(request):
     print(video_url)
 
     url_ = y_disk.publish(dest_path)
-    print(url_)
+    # print(url_)
     meta = y_disk.get_meta(dest_path)
     # print(meta)
     video_url = meta['public_url']
@@ -45,11 +45,12 @@ async def post_upload(request):
 
     if not (y_disk.is_public_file(public_key)):
         url_ = y_disk.publish(dest_path)
-        print(url_)
+        # print(url_)
         meta = y_disk.get_meta(dest_path)
         # print(meta)
         video_url = meta['public_url']
 
+    print(url_)
     print('GET LINK')
     print(video_url)
 
